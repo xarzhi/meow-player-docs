@@ -159,10 +159,9 @@ watch(
 .fullscreen_box {
 	position: relative;
 	width: 100%;
-
 	.reflect_box {
-		width: 46vh;
-		height: 46vh;
+		width: 400px;
+		height: 400px;
 		display: flex;
 		z-index: 3;
 		transition: all 0.3s;

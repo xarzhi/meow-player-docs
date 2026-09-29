@@ -3,7 +3,7 @@
 		:data-tauri-drag-region="dragRegion"
 		:class="{
 			topbar: true,
-			top: true,
+			meow_top: true,
 			is_player_fullscreen,
 		}"
 	>
@@ -176,6 +176,7 @@ const changeTheme = () => {
 </script>
 
 <style lang="scss" scoped>
+.meow_top,
 .top {
 	box-shadow: var(--top-shaow);
 	position: relative;

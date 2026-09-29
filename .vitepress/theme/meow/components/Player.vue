@@ -358,7 +358,7 @@ const lyricsClicked = () => {
 	align-items: center;
 	height: var(--player-height);
 	width: 100%;
-	position: fixed;
+	position: absolute;
 	bottom: 0;
 	transition: height 0.4s;
 	box-sizing: border-box;
@@ -366,9 +366,8 @@ const lyricsClicked = () => {
 	background-color: var(--player-bg-color);
 	backdrop-filter: blur(2px);
 	&.fullscreen {
-		width: 100vw;
+		width: 100%;
 		height: 100%;
-
 		.fake_cover {
 			.cover {
 				cursor: default;
@@ -388,6 +387,7 @@ const lyricsClicked = () => {
 			display: flex;
 			transition: all 0.4s;
 			z-index: 2;
+			background-color: #fff;
 			.player_bg_box {
 				width: 100%;
 				height: 100%;
