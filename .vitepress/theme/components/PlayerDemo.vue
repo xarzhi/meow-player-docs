@@ -25,7 +25,7 @@ const stage = ref(null)
 const host = ref(null)
 const scale = ref(0.8)
 // 宿主元素上的材质 class：meow-mat-classic / meow-mat-acrylic / meow-mat-mica
-const materialClass = ref('meow-mat-classic')
+const materialClass = ref('meow-mat-acrylic')
 let instance = null
 let observer = null
 // App 挂载后才能拿到（见下面 onMounted）
@@ -178,7 +178,7 @@ onMounted(async () => {
 	stopMaterialWatch = watch(
 		() => playerStore.currentMaterial,
 		material => {
-			materialClass.value = `meow-mat-${material || 'classic'}`
+			materialClass.value = `meow-mat-${material || 'acrylic'}`
 		},
 		{ immediate: true }
 	)

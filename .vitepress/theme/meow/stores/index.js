@@ -48,7 +48,7 @@ export const usePlayerStore = defineStore('store', () => {
 	const currentBgItem = ref({}) // 当前壁纸的信息，id,path,kind
 	const lastBgUpdateTime = ref(0) // 上次壁纸的切换时间
 	const needBg = ref(false) // 需不需要壁纸功能
-	const currentMaterial = ref('classic') // 当前窗口材质：classic(默认) / acrylic / mica
+	const currentMaterial = ref('acrylic') // 当前窗口材质：acrylic(默认) / mica / classic
 	const timeGap = ref(30) // 壁纸自动切换的时间间隔
 	const timeUnit = ref('min') // 壁纸自动切换的时间单位
 	const changeMode = ref('next') // 壁纸自动切换的方式：顺序切换、随机切换
@@ -169,11 +169,11 @@ export const usePlayerStore = defineStore('store', () => {
 	// 加载配置
 	const initConfig = async () => {
 		currentBgItem.value = JSON.parse(await storage.getItem('currentBgItem')) || {}
-		// 材质只有这三种；存过的旧值（比如 tabbed）一律回落到经典的纯色窗口
+		// 材质只有这三种；默认给亚克力，存过的旧值（比如 tabbed）也回落到亚克力
 		const savedMaterial = await storage.getItem('currentMaterial')
 		currentMaterial.value = ['acrylic', 'mica', 'classic'].includes(savedMaterial)
 			? savedMaterial
-			: 'classic'
+			: 'acrylic'
 		needBg.value = (await storage.getItem('needBg')) || false
 		timeGap.value = (await storage.getItem('timeGap')) || 30
 		timeUnit.value = (await storage.getItem('timeUnit')) || 'min'
