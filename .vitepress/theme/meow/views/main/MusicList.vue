@@ -185,6 +185,11 @@ onMounted(async () => {
 	const sort_mode = (await storage.getItem('sort_mode')) ?? 'desc'
 	await loadData([], sort_cate, sort_mode === 'desc' ? true : false)
 })
+// 音乐库目录的「刷新后自动恢复」是异步的：那边扫完会派发 meow:music-dir-updated，
+// 这里收到就重新拉一次列表 —— 否则后端已经有歌了，列表还是旧的那几行。
+globalThis.addEventListener('meow:music-dir-updated', async () => {
+	await loadData(searchList.value, playerStore.sort_cate, playerStore.sort_mode === 'desc')
+})
 const getFlipDoms = () => {
 	return [
 		...lis.value.map(item => {

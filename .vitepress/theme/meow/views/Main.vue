@@ -36,12 +36,6 @@ const menuList = [
 		path: '/main_window/main/ArtistList',
 		icon: 'icon-artist',
 	},
-	{
-		title: '歌单',
-		path: '/main_window/main/playlist',
-		icon: 'icon-music-list',
-		rightIcon: 'icon-add',
-	},
 ]
 
 onMounted(() => {

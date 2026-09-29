@@ -1,24 +1,34 @@
 <template>
 	<div class="lyrics_outer_box">
 		<transition name="fade">
-			<component :is="Lyrics" v-show="!props.fullSide"></component>
+			<!-- 只用 App 自己这套朴素渲染的 Lyrics.vue：
+			     Apple Music 那套（@applemusic-like-lyrics/*）在网页里跑不起来（wasm/pixi），
+			     这里以前还只是 import 进来没用上，白白把一堆依赖拖进浏览器包，已经去掉了。 -->
+			<Lyrics
+				v-show="fullSide !== 'left'"
+				:fullSide="fullSide"
+				:from="from"
+				@lyricsClicked="$emit('lyricsClicked')"
+			/>
 		</transition>
 	</div>
 </template>
 
 <script setup>
-import { watch } from 'vue'
-import AppleLyrics from './AppleLyricsVue.vue'
-import AppleLyricsNative from './AppleLyricsNative.vue';
-import Lyrics from './Lyrics.vue';
+import Lyrics from './Lyrics.vue'
 
-
-const props = defineProps({
+defineProps({
 	fullSide: {
 		type: String,
 		default: '',
 	},
+	from: {
+		type: String,
+		default: '',
+	},
 })
+
+defineEmits(['lyricsClicked'])
 </script>
 
 <style lang="scss" scoped>

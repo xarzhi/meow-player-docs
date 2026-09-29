@@ -38,10 +38,6 @@ const routes = [
 						path: 'cloudmusic',
 						component: () => import('@/views/main/CloudMusic.vue'),
 					},
-					{
-						path: 'playlist',
-						component: () => import('@/views/main/Playlist.vue'),
-					},
 				],
 			},
 			{

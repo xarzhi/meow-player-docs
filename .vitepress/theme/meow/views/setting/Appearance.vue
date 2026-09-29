@@ -247,6 +247,8 @@ const isDark = ref(false)
 const bgItem = ref(null)
 const bgListRef = ref(null)
 const observer = ref(null)
+// “跟随系统”用的 matchMedia（挂载时建，卸载时摘掉监听）
+let mql = null
 const active_bd = reactive({
 	left: 0,
 	top: 0,
@@ -271,11 +273,16 @@ onMounted(async () => {
 		setActiveBgPos()
 	})
 	observer.value.observe(bgListRef.value)
-	isDark.value = playerStore.themeMode === 'dark' ? true : false
+	isDark.value = resolveThemeMode(playerStore.themeMode) === 'dark'
+	// “跟随系统”要监听系统明暗的变化（globalThis：全局 window 被上面的同名变量盖住了）
+	mql = globalThis.matchMedia('(prefers-color-scheme: dark)')
+	mql.addEventListener('change', onSystemThemeChange)
 })
 
 onUnmounted(() => {
 	observer.value.disconnect()
+	mql?.removeEventListener('change', onSystemThemeChange)
+	mql = null
 })
 
 watch(
@@ -323,7 +330,8 @@ const selected = async paths => {
 const changeMaterial = material => {
 	currentMaterial.value = material
 	storage.setItem('currentMaterial', material)
-	setEffects(material)
+	// 经典 = 不透明纯色窗口，不去向原生窗口要任何材质效果
+	if (material !== 'classic') setEffects(material)
 }
 
 const needBgChange = val => {
@@ -340,9 +348,32 @@ const changeModeChange = val => {
 	storage.setItem('changeMode', val)
 }
 
+// light / dark / system -> 真正写进 data-theme 的 light / dark
+// 注意：这个文件顶部 `const window = getCurrentWindow()` 把全局 window 盖掉了，
+// 所以这里必须用 globalThis.matchMedia，写成 window.matchMedia 会报「不是函数」。
+const resolveThemeMode = mode => {
+	if (mode !== 'system') return mode === 'dark' ? 'dark' : 'light'
+	return globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+// 主题只认 html 上的 data-theme（绝不能写成 html.dark —— 那是文档站的类）
+const applyThemeMode = mode => {
+	const resolved = resolveThemeMode(mode)
+	document.documentElement.dataset.theme = resolved
+	playerStore.isLight = resolved === 'light'
+	isDark.value = resolved === 'dark'
+}
+// 系统明暗变了：只有当前是“跟随系统”才重算
+const onSystemThemeChange = () => {
+	if (playerStore.themeMode === 'system') applyThemeMode('system')
+}
+
 const changeThemeColor = themeColor => {
+	// 复用原逻辑：写 store / localStorage / isLight，并通知原生窗口和迷你播放器
 	wallpaperTheme.changeTheme(themeColor)
-	isDark.value = themeColor === 'dark' ? true : false
+	// 但 hook 里 'system' 那一支把 matchMedia 的结果写反了、也不会监听系统变化，
+	// 所以这里按 themeMode 再统一重算一次 data-theme
+	// （PlayerDemo 里还有一份全局的 watcher + 系统监听，两边算出来是一样的）。
+	applyThemeMode(themeColor)
 }
 const bgItemMouseEnter = e => {
 	tempActiveBd.left = event.target.offsetLeft - 4
@@ -410,8 +441,8 @@ const materialList = [
 		material: 'mica',
 	},
 	{
-		label: '标签页',
-		material: 'tabbed',
+		label: '经典',
+		material: 'classic',
 	},
 ]
 const themeList = [

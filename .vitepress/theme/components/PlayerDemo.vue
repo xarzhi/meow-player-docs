@@ -6,9 +6,12 @@
 //    WINDOW_DEFAULT_WIDTH / WINDOW_DEFAULT_HEIGHT），内部所有间距字号都用原值，
 //    最后整体 transform: scale() 缩到 hero 里。直接压到 1000×640 的话，
 //    每个间距都被压扁，就会「挤在一起」。
-// 2. 磨砂 —— 原生版是靠 DWM 的亚克力/云母做的，而 App 的主题里
-//    --top-bg-color / --menu-bg-color / --content-bg-color 都是占位值 transition（等于透明）。
-//    网页里没有原生材质，所以这里自己补：舞台铺一层彩色底 -> 窗口根节点 backdrop-filter 糊它。
+// 2. 主题 + 材质 —— App 的主题里 --top-bg-color / --menu-bg-color /
+//    --content-bg-color 都是占位值 transition（等于透明），原生版靠 DWM 的
+//    亚克力/云母出效果。网页里没有原生材质，所以这里只做两件事：
+//      · 窗口底色只跟 data-theme 走：亮色 = 亮底 + 黑字，暗色 = 暗底 + 白字；
+//      · 材质由设置页的 currentMaterial 决定，在宿主元素上加 meow-mat-* class。
+//        默认 classic = 不透明纯色窗口，什么玻璃效果都不加（没有壁纸，也没有默认磨砂）。
 //
 // 依赖里有 wasm 和一堆浏览器 API，所以整个演示只在客户端挂载（SSR 时这里是个空 div）。
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -21,33 +24,83 @@ const CANVAS_H = 750
 const stage = ref(null)
 const host = ref(null)
 const scale = ref(0.8)
+// 宿主元素上的材质 class：meow-mat-classic / meow-mat-acrylic / meow-mat-mica
+const materialClass = ref('meow-mat-classic')
 let instance = null
 let observer = null
+// App 挂载后才能拿到（见下面 onMounted）
+let playerStore = null
+let storage = null
+let stopThemeWatch = null
+let stopMaterialWatch = null
+let mql = null
+let onSystemThemeChange = null
 
-// 播放器的主题跟着文档站的明暗开关走：
-//   亮色 -> 亮底 + 黑字；暗色 -> 暗底 + 白字
-// 实现上只有「html 上的 data-theme」这一个来源：
-//   这里按 isDark 写它，App 自己顶栏那个太阳/月亮按钮也写它，CSS 只看它。
-// （CSS 里绝对不能再写 html.dark —— 那是文档站的类，会和这里打架。）
+// ---- 主题：html 上的 data-theme 是唯一的开关 --------------------------------
+// 亮色 -> 亮底 + 黑字；暗色 -> 暗底 + 白字。写它的只有两条路：
+//   1) App 自己的设置（store.themeMode：light / dark / system + matchMedia 监听）；
+//   2) 文档站的明暗开关（演示挂在文档站首页里，跟着走更协调）。
+// CSS 只看 data-theme，绝对不看 html.dark —— 那是文档站的类，
+// 之前写过一次，结果「文档站一暗，播放器字全白」，踩过坑。
 const { isDark } = useData()
+
+const STORE_KEY = 'meow-store:setting.json'
+
+// 'light' / 'dark' / 'system' -> 真正写进 data-theme 的 'light' / 'dark'
+const resolveTheme = mode => {
+	if (mode !== 'system') return mode === 'dark' ? 'dark' : 'light'
+	const dark =
+		typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+			? window.matchMedia('(prefers-color-scheme: dark)').matches
+			: false
+	return dark ? 'dark' : 'light'
+}
+
+const applyTheme = mode => {
+	if (typeof document === 'undefined') return
+	const resolved = resolveTheme(mode)
+	document.documentElement.dataset.theme = resolved
+	if (playerStore) playerStore.isLight = resolved === 'light'
+}
+
+const readSetting = () => {
+	try {
+		return JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {}
+	} catch {
+		return {}
+	}
+}
+
+// 只动这一个键，别的设置原样保留
+const writeSetting = (key, value) => {
+	const raw = readSetting()
+	raw[key] = value
+	try {
+		localStorage.setItem(STORE_KEY, JSON.stringify(raw))
+	} catch {
+		// 隐私模式写不了就算了
+	}
+}
+
 watch(
-  isDark,
-  (dark) => {
-    if (typeof document === 'undefined') return
-    const theme = dark ? 'dark' : 'light'
-    document.documentElement.dataset.theme = theme
-    // 顺便把 App 自己存的主题（localStorage）也改成一致：
-    // App 启动时 initConfig 会用这个值再写一次 data-theme，不一致的话首屏会被它覆盖。
-    try {
-      const KEY = 'meow-store:setting.json'
-      const raw = JSON.parse(localStorage.getItem(KEY) || '{}') || {}
-      raw.themeMode = theme
-      localStorage.setItem(KEY, JSON.stringify(raw))
-    } catch {
-      // 隐私模式写不了就算了
-    }
-  },
-  { immediate: true }
+	isDark,
+	dark => {
+		if (typeof document === 'undefined') return
+		const theme = dark ? 'dark' : 'light'
+		if (playerStore) {
+			// App 已经挂载：走 store，由下面 onMounted 里那个 watcher 统一写 data-theme
+			playerStore.themeMode = theme
+			if (storage) storage.setItem('themeMode', theme)
+			else writeSetting('themeMode', theme)
+			return
+		}
+		// App 还没挂载：先自己写，并把文档站的主题当成默认值存下来
+		// （不存的话 App 启动时 initConfig 会用默认的 light 再写一遍，把首屏覆盖掉）。
+		// 已经存过用户选的主题就不再覆盖，否则设置页里的选择刷新后会被文档站顶掉。
+		document.documentElement.dataset.theme = theme
+		if (!readSetting().themeMode) writeSetting('themeMode', theme)
+	},
+	{ immediate: true }
 )
 
 function fit() {
@@ -75,6 +128,8 @@ onMounted(async () => {
 		{ default: meowRouter },
 		{ default: Antd },
 		{ default: Drawer },
+		{ usePlayerStore },
+		{ default: useStorage },
 	] = await Promise.all([
 		import('../meow/App.vue'),
 		import('vue'),
@@ -83,6 +138,8 @@ onMounted(async () => {
 		import('ant-design-vue'),
 		// 原版在 main.js 里全局注册了 Drawer，这里自己 createApp 也要注册
 		import('../meow/components/Drawer.vue'),
+		import('../meow/stores/index.js'),
+		import('../meow/hooks/useStorage.js'),
 	])
 
 	// meow-player 的全局样式：只在演示真的挂载时才加载
@@ -93,13 +150,38 @@ onMounted(async () => {
 		import('ant-design-vue/dist/reset.css'),
 	])
 
+	const pinia = createPinia()
 	instance = createApp(MeowApp)
-	instance.use(createPinia())
+	instance.use(pinia)
 	instance.use(meowRouter)
 	instance.use(Antd)
 	instance.component('Drawer', Drawer)
 	instance.config.errorHandler = (err, _vm, info) => console.error('[meow]', info, err)
 	instance.mount(host.value)
+
+	// ---- App 挂载后接管「主题」和「材质」：store 是唯一来源 ----
+	// （store 的 initConfig 是异步的：先把它读到的本地值塞回去，免得默认值闪一下。）
+	playerStore = usePlayerStore(pinia)
+	storage = useStorage().storage
+	const saved = readSetting()
+	if (saved.themeMode) playerStore.themeMode = saved.themeMode
+	if (saved.currentMaterial) playerStore.currentMaterial = saved.currentMaterial
+
+	// 跟随系统：系统明暗一变，只要当前是 system 就重算一次 data-theme
+	mql = window.matchMedia('(prefers-color-scheme: dark)')
+	onSystemThemeChange = () => {
+		if (playerStore.themeMode === 'system') applyTheme('system')
+	}
+	mql.addEventListener('change', onSystemThemeChange)
+
+	stopThemeWatch = watch(() => playerStore.themeMode, mode => applyTheme(mode), { immediate: true })
+	stopMaterialWatch = watch(
+		() => playerStore.currentMaterial,
+		material => {
+			materialClass.value = `meow-mat-${material || 'classic'}`
+		},
+		{ immediate: true }
+	)
 
 	fit()
 	if (typeof ResizeObserver !== 'undefined') {
@@ -112,6 +194,15 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	observer?.disconnect()
 	if (typeof window !== 'undefined') window.removeEventListener('resize', fit)
+	stopThemeWatch?.()
+	stopMaterialWatch?.()
+	if (mql && onSystemThemeChange) mql.removeEventListener('change', onSystemThemeChange)
+	mql = null
+	onSystemThemeChange = null
+	stopThemeWatch = null
+	stopMaterialWatch = null
+	playerStore = null
+	storage = null
 	try {
 		instance?.unmount()
 	} catch {
@@ -124,13 +215,19 @@ onBeforeUnmount(() => {
 <template>
 	<div ref="stage" class="meow-stage">
 		<div class="meow-scaler" :style="{ width: '100%', height: '100%' }">
-			<div ref="host" class="meow-host" :style="{ width: '100%', height: '100%' }" />
+			<div
+				ref="host"
+				class="meow-host"
+				:class="materialClass"
+				:style="{ width: '100%', height: '100%' }"
+			/>
 		</div>
 	</div>
 </template>
 
 <style scoped>
-/* 舞台：给磨砂玻璃一层「有东西可糊」的底（相当于 App 里开着壁纸） */
+/* 舞台：纯色底（不铺壁纸、不铺渐变），只是给缩放后的窗口留个边框余地。
+   亮色用亮底；暗色在下面那个全局块里换成暗底。 */
 .meow-stage {
 	position: relative;
 	display: flex;
@@ -149,7 +246,9 @@ onBeforeUnmount(() => {
 	flex-shrink: 0;
 }
 
-/* 画布：真实尺寸 1250×750，靠 transform 缩放（不改内部任何尺寸） */
+/* 画布：真实尺寸 1250×750，靠 transform 缩放（不改内部任何尺寸）。
+   这里不写 backdrop-filter：默认材质（classic）就是「不透明纯色窗口」，
+   窗口底色由下面的全局块按 data-theme 给，亚克力/云母才会另外加玻璃。 */
 .meow-host {
 	position: absolute;
 	top: 0;
@@ -165,40 +264,14 @@ onBeforeUnmount(() => {
 	width: 100% !important;
 	height: 100% !important;
 }
-
-/* ---- 磨砂玻璃：补上原生窗口材质那一层 ----------------------------------
-   --top-bg-color / --menu-bg-color / --content-bg-color 在 App 的主题里是占位值
-   transition（也就是透明），原生版靠 DWM 的亚克力/云母出效果。网页里只能用
-   backdrop-filter 把舞台那层彩色底糊一下，做出同样的观感。 */
-.meow-host :deep(.main_window) {
-	background-color: rgba(255, 255, 255, 0.55) !important;
-	backdrop-filter: blur(30px) saturate(1.6);
-	-webkit-backdrop-filter: blur(30px) saturate(1.6);
-}
-
-/* 顶栏 / 内容区：一层很淡的白，让「磨砂玻璃」有面儿 */
-.meow-host :deep(.top) {
-	background-color: rgba(255, 255, 255, 0.28) !important;
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
-}
-.meow-host :deep(.main_view) {
-	background-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* 播放条本来就有 --player-bg-color: rgba(255,255,255,.8)，再补一点模糊 */
-.meow-host :deep(.player_box) {
-	background-color: rgba(255, 255, 255, 0.6) !important;
-	backdrop-filter: blur(20px) saturate(1.4);
-	-webkit-backdrop-filter: blur(20px) saturate(1.4);
-}
 </style>
 
-<!-- 主题色单独放一个「非 scoped」的块：
-     1) scoped 里写 :global(html.dark) 匹配不上，实测暗色下窗口还是全透明；
+<!-- 主题 / 材质相关样式放在「非 scoped」的块里：
+     1) 它们都要按 html[data-theme=...] 走，而 scoped 会给选择器挂上 data-v 属性，匹配不上；
      2) 文字色要覆盖 App 的 --primary-text-color，而它定义在 :root[data-theme='light'] 上，
         优先级 (0,2,0) 比 .meow-host 高，所以必须写成 html[data-theme='light'] .meow-host。
-     目标就是：亮色 = 亮底 + 黑字，暗色 = 暗底 + 白字。 -->
+     目标：亮色 = 亮底 + 黑字，暗色 = 暗底 + 白字；
+     材质只有 .meow-host 上多出 meow-mat-acrylic / meow-mat-mica 时才出玻璃。 -->
 <style>
 /* 只认 App 自己的 data-theme！
    千万不要写 html.dark —— 那是文档站（VitePress）的暗色类，
@@ -224,16 +297,45 @@ html[data-theme='dark'] .meow-host {
 	--player-artist-text-color: rgba(255, 255, 255, 0.65);
 	--menu-active-text-color: #fff;
 }
+
+/* ---- 窗口底色：不透明纯色（默认材质 classic 就长这样，什么都不加）----
+   取值用 App 自己的亮/暗底色，跟它的调色板一致。 */
+html[data-theme='light'] .meow-host .main_window {
+	background-color: #f3f5f7 !important;
+}
 html[data-theme='dark'] .meow-host .main_window {
-	background-color: rgba(22, 24, 30, 0.72) !important;
+	background-color: #232323 !important;
 }
-html[data-theme='dark'] .meow-host .top {
-	background-color: rgba(255, 255, 255, 0.06) !important;
+
+/* ---- 材质：只有设置页里选了才生效，默认 classic 不加任何效果 --------------
+   材质 class 由 store 的 currentMaterial 驱动，加在 .meow-host 上：
+     meow-mat-classic（默认） / meow-mat-acrylic / meow-mat-mica
+   classic 故意不写规则 —— 不透明纯色就是它的效果。 */
+
+/* 亚克力：半透明底 + 30px 模糊（Win11 亚克力的观感） */
+html[data-theme='light'] .meow-host.meow-mat-acrylic .main_window {
+	background-color: rgba(243, 245, 247, 0.55) !important;
+	backdrop-filter: blur(30px) saturate(1.6);
+	-webkit-backdrop-filter: blur(30px) saturate(1.6);
 }
-html[data-theme='dark'] .meow-host .main_view {
-	background-color: rgba(255, 255, 255, 0.04) !important;
+html[data-theme='dark'] .meow-host.meow-mat-acrylic .main_window {
+	background-color: rgba(35, 35, 35, 0.55) !important;
+	backdrop-filter: blur(30px) saturate(1.6);
+	-webkit-backdrop-filter: blur(30px) saturate(1.6);
 }
-html[data-theme='dark'] .meow-host .player_box {
-	background-color: rgba(30, 32, 40, 0.78) !important;
+
+/* 云母：半透明底 + 更重的模糊 + 一层很淡的色调（Win11 云母偏「带底色的雾面」）。
+   那层色调用 background-image 的渐变叠，不额外加 DOM，省得挡住内容。 */
+html[data-theme='light'] .meow-host.meow-mat-mica .main_window {
+	background-color: rgba(243, 245, 247, 0.6) !important;
+	background-image: linear-gradient(rgba(120, 140, 190, 0.12), rgba(120, 140, 190, 0.12));
+	backdrop-filter: blur(60px) saturate(1.4);
+	-webkit-backdrop-filter: blur(60px) saturate(1.4);
+}
+html[data-theme='dark'] .meow-host.meow-mat-mica .main_window {
+	background-color: rgba(35, 35, 35, 0.6) !important;
+	background-image: linear-gradient(rgba(150, 170, 220, 0.08), rgba(150, 170, 220, 0.08));
+	backdrop-filter: blur(60px) saturate(1.4);
+	-webkit-backdrop-filter: blur(60px) saturate(1.4);
 }
 </style>

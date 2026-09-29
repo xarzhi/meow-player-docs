@@ -31,7 +31,7 @@
 					v-if="is_player_fullscreen"
 					:style="{ width: fullSide === 'right' ? '100%' : fullSide === 'left' ? 0 : '45%' }"
 				>
-					<Lyrics :fullSide />
+					<Lyrics :fullSide="fullSide" @lyricsClicked="lyricsClicked" />
 				</div>
 			</div>
 		</div>
@@ -124,11 +124,9 @@
                         </select>
                     </div>
                 </div> -->
-				<div class="lyrics btn">
-					<div :class="{ icon: true, light_icon: is_player_fullscreen }" @click="toggleLyricsWindow">
-						<i class="iconfont icon-lyrics-window"></i>
-					</div>
-				</div>
+				<!-- 原来这里那个「桌面歌词」按钮（icon-lyrics-window）已经删掉：
+				     网页端开不了独立的桌面歌词窗口，它后来只被用来收起 / 展开播放条上方那条窄条，
+				     现在窄条整体砍了，按钮也一起删。 -->
 
 				<a-popover placement="top" trigger="click" :arrow="false" :getPopupContainer="e => e.parentElement">
 					<template #content>
@@ -186,12 +184,41 @@
 			</div>
 			<!-- ⬆️⬆️⬆️⬆️⬆️⬆️⬆️右边部分⬆️⬆️⬆️⬆️⬆️⬆️⬆️ -->
 
+			<!-- 「桌面歌词」窄条已经整体砍掉（连同它的状态和按钮），
+			     全屏播放页的歌词由上面 .full_box 里的 <Lyrics /> 负责。 -->
+
+			<!-- 全屏播放页：进度条上方是频谱，最下面一行右侧是「播放器样式」设置按钮 -->
+			<div class="full_tools" v-if="is_player_fullscreen">
+				<div class="spectrum_box">
+					<Spectrum
+						:bars="playerStyle.spectrumBars"
+						:gap="playerStyle.spectrumGap"
+						:radius="playerStyle.spectrumRadius"
+						:height="playerStyle.spectrumHeight"
+						:color-mode="playerStyle.spectrumColorMode"
+						:color="playerStyle.spectrumColor"
+						:color-from="playerStyle.spectrumColor"
+						:color-to="playerStyle.spectrumColorTo"
+					/>
+				</div>
+				<div class="tools_row">
+					<div class="style_btn" title="播放器样式" @click="styleModalOpen = true">
+						<div class="icon light_icon">
+							<i class="iconfont icon-setting"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<Progress />
 		</div>
 		<!-- ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑  一直处于下放的播放器，包含播放器、按钮 ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑   -->
 
 		<!-- 播放列表 -->
 		<PlayingList v-model="visible" drawerWidth="350px" drawerHeight="60vh" drawerMaxHeight="60vh"></PlayingList>
+
+		<!-- 频谱 / 歌词样式设置弹窗（挂在 .player_box 里，跟着画布一起缩放） -->
+		<PlayerStyleModal v-model:open="styleModalOpen" />
 	</div>
 </template>
 
@@ -209,15 +236,26 @@ import Progress from './Progress.vue'
 import usePlayer from '@hooks/usePlayer.js'
 import PopConfirm from '@/components/PopConfirm.vue'
 import useWebviewWindow from '@/hooks/useWebviewWindow.js'
+// 全屏播放页的频谱 + 右下角的样式设置弹窗；两者的配置都放在共享的 playerStyle 里
+import Spectrum from './Spectrum.vue'
+import PlayerStyleModal from './PlayerStyleModal.vue'
+import { playerStyle } from './playerStyle.js'
+import { useLyricsFallback } from './Lyrics/useLyricsFallback.js'
 
 const playerStore = usePlayerStore()
 const player = usePlayer()
 const webviewWin = useWebviewWindow()
 
+// 没有时间轴的纯文本歌词兜个时间轴（详见 Lyrics/useLyricsFallback.js）
+useLyricsFallback()
+
 const visible = ref(false)
 
 const fullSide = ref('')
 const miniPlayer = ref(null)
+
+// 右下角「播放器样式」设置弹窗
+const styleModalOpen = ref(false)
 
 const RecordMap = new Map([
 	['黑胶唱片', VinylRecord],
@@ -288,33 +326,6 @@ onUnmounted(() => {
 })
 const openPlayingList = () => {
 	visible.value = !visible.value
-}
-
-const lyricsWin = ref(null)
-const toggleLyricsWindow = async () => {
-	if (lyricsWin.value) {
-		console.log(11)
-		const visible = await lyricsWin.value.isVisible()
-		if (visible) {
-			lyricsWin.value.close()
-			lyricsWin.value = null
-		}
-	} else {
-		console.log(22)
-		lyricsWin.value = webviewWin.createLyricsWindow()
-	}
-
-	// const lyrics_win = await WebviewWindow.getByLabel('lyrics_window')
-	// if (lyrics_win !== null) {
-	// 	const isVisible = await lyrics_window.value.isVisible()
-	// 	if (isVisible) {
-	// 		lyrics_window.value.hide()
-	// 	} else {
-	// 		lyrics_window.value.show()
-	// 	}
-	// } else {
-	// 	const lyricsWin = webviewWin.createLyricsWindow()
-	// }
 }
 
 const clickToPlay = async song => {
@@ -493,6 +504,63 @@ const lyricsClicked = () => {
 	.box_son {
 		flex: 1 1 33.33%;
 		min-width: 0;
+	}
+
+	/* ---- 全屏播放页：进度条上方的频谱 + 右下角设置按钮 ---------------------- */
+	.full_tools {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: calc(100% + 10px);
+		display: flex;
+		flex-flow: column;
+		/* 这块是浮在歌词/唱片上的，别挡住鼠标操作 */
+		pointer-events: none;
+
+		.spectrum_box {
+			width: 100%;
+			padding: 0 30px;
+			box-sizing: border-box;
+		}
+
+		.tools_row {
+			display: flex;
+			justify-content: flex-end;
+			padding: 0 30px;
+			box-sizing: border-box;
+		}
+
+		.style_btn {
+			pointer-events: auto;
+			width: 34px;
+			height: 34px;
+			cursor: pointer;
+			border-radius: 6px;
+			background-color: rgba(255, 255, 255, 0.12);
+			backdrop-filter: blur(6px);
+
+			.icon {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				border-radius: 6px;
+
+				i {
+					font-size: 17px;
+					color: #fafafa;
+				}
+
+				&:hover {
+					background-color: rgba(255, 255, 255, 0.24);
+				}
+
+				&:active {
+					transform: scale(0.9);
+				}
+			}
+		}
 	}
 
 	.player_box_left {
