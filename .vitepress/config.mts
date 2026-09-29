@@ -20,8 +20,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '指南', link: '/guide/' },
-      { text: '开发', link: '/dev/build' },
-      { text: 'Gitee', link: 'https://gitee.com/xarzhi/meow-player/releases' },
+      { text: '下载', link: 'https://gitee.com/xarzhi/meow-player/releases' },
     ],
     sidebar: [
       {
@@ -35,16 +34,7 @@ export default defineConfig({
           { text: '快捷键', link: '/guide/shortcuts' },
           { text: '常见问题', link: '/guide/faq' },
         ],
-      },
-      {
-        text: '开发',
-        items: [
-          { text: '构建与运行', link: '/dev/build' },
-          { text: '打包与发布', link: '/dev/package' },
-          { text: '目录结构', link: '/dev/architecture' },
-          { text: '文档站', link: '/dev/docs' },
-        ],
-      },
+      }
     ],
     outline: { label: '本页目录', level: [2, 3] },
     docFooter: { prev: '上一篇', next: '下一篇' },
