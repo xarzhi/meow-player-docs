@@ -10,10 +10,10 @@ hero:
         alt: VitePress
     actions:
         - theme: brand
-          text: 开始使用
+          text: 查看详情
           link: /guide/
         - theme: alt
-          text: 下载最新版
+          text: 前往下载
           link: https://gitee.com/xarzhi/meow-player/releases
 
 features:

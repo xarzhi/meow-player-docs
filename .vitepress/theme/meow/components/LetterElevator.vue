@@ -97,6 +97,7 @@ const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ#']
 	}
 
 	.letters_nav {
+		
 		position: absolute;
 		border-radius: 4px;
 		transition: right 0.3s;
@@ -107,6 +108,7 @@ const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ#']
 		box-sizing: border-box;
 		align-items: center;
 		background-color: var(--letter-evt-bg);
+
 		backdrop-filter: blur(10px);
 		border-radius: 20px;
 		&::-webkit-scrollbar {
@@ -123,7 +125,7 @@ const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ#']
 			width: 100%;
 			padding: 10px 0;
 			box-sizing: border-box;
-			height: 65vh;
+			height: 65%;
 			background-color: transparent;
 			overflow-y: auto;
 			scrollbar-width: none;
