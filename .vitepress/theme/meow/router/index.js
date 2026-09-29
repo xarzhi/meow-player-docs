@@ -61,10 +61,6 @@ const routes = [
 						path: 'lyrics',
 						component: () => import('@/views/setting/Lyrics.vue'),
 					},
-					{
-						path: 'cloud',
-						component: () => import('@/views/setting/Cloud.vue'),
-					},
 				],
 			},
 		],

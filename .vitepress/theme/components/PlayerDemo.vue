@@ -11,7 +11,7 @@
 //    网页里没有原生材质，所以这里自己补：舞台铺一层彩色底 -> 窗口根节点 backdrop-filter 糊它。
 //
 // 依赖里有 wasm 和一堆浏览器 API，所以整个演示只在客户端挂载（SSR 时这里是个空 div）。
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useData } from 'vitepress'
 import { initBackend } from '../meow-shim/backend.js'
 
@@ -23,6 +23,32 @@ const host = ref(null)
 const scale = ref(0.8)
 let instance = null
 let observer = null
+
+// 播放器的主题跟着文档站的明暗开关走：
+//   亮色 -> 亮底 + 黑字；暗色 -> 暗底 + 白字
+// 实现上只有「html 上的 data-theme」这一个来源：
+//   这里按 isDark 写它，App 自己顶栏那个太阳/月亮按钮也写它，CSS 只看它。
+// （CSS 里绝对不能再写 html.dark —— 那是文档站的类，会和这里打架。）
+const { isDark } = useData()
+watch(
+  isDark,
+  (dark) => {
+    if (typeof document === 'undefined') return
+    const theme = dark ? 'dark' : 'light'
+    document.documentElement.dataset.theme = theme
+    // 顺便把 App 自己存的主题（localStorage）也改成一致：
+    // App 启动时 initConfig 会用这个值再写一次 data-theme，不一致的话首屏会被它覆盖。
+    try {
+      const KEY = 'meow-store:setting.json'
+      const raw = JSON.parse(localStorage.getItem(KEY) || '{}') || {}
+      raw.themeMode = theme
+      localStorage.setItem(KEY, JSON.stringify(raw))
+    } catch {
+      // 隐私模式写不了就算了
+    }
+  },
+  { immediate: true }
+)
 
 function fit() {
 	const el = stage.value
@@ -114,11 +140,7 @@ onBeforeUnmount(() => {
 	height: 100%;
 	overflow: hidden;
 	border-radius: 12px;
-	background:
-		radial-gradient(55% 50% at 14% 8%, #c7d2fe 0%, rgba(199, 210, 254, 0) 62%),
-		radial-gradient(48% 46% at 88% 18%, #fbcfe8 0%, rgba(251, 207, 232, 0) 62%),
-		radial-gradient(58% 55% at 62% 98%, #bae6fd 0%, rgba(186, 230, 253, 0) 64%),
-		linear-gradient(135deg, #eef2ff 0%, #e0f2fe 100%);
+	background: #e9eef6;
 	box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
@@ -149,7 +171,7 @@ onBeforeUnmount(() => {
    transition（也就是透明），原生版靠 DWM 的亚克力/云母出效果。网页里只能用
    backdrop-filter 把舞台那层彩色底糊一下，做出同样的观感。 */
 .meow-host :deep(.main_window) {
-	background-color: transparent !important;
+	background-color: rgba(255, 255, 255, 0.55) !important;
 	backdrop-filter: blur(30px) saturate(1.6);
 	-webkit-backdrop-filter: blur(30px) saturate(1.6);
 }
@@ -166,22 +188,52 @@ onBeforeUnmount(() => {
 
 /* 播放条本来就有 --player-bg-color: rgba(255,255,255,.8)，再补一点模糊 */
 .meow-host :deep(.player_box) {
+	background-color: rgba(255, 255, 255, 0.6) !important;
 	backdrop-filter: blur(20px) saturate(1.4);
 	-webkit-backdrop-filter: blur(20px) saturate(1.4);
 }
+</style>
 
-/* 深色主题（App 会把 data-theme 设在 html 上）：舞台底也压暗，不然白底配亮字 */
-:global(html[data-theme='dark']) .meow-stage {
-	background:
-		radial-gradient(55% 50% at 14% 8%, rgba(76, 29, 149, 0.55) 0%, rgba(76, 29, 149, 0) 62%),
-		radial-gradient(48% 46% at 88% 18%, rgba(131, 24, 67, 0.5) 0%, rgba(131, 24, 67, 0) 62%),
-		radial-gradient(58% 55% at 62% 98%, rgba(12, 74, 110, 0.55) 0%, rgba(12, 74, 110, 0) 64%),
-		linear-gradient(135deg, #171b26 0%, #0d1017 100%);
+<!-- 主题色单独放一个「非 scoped」的块：
+     1) scoped 里写 :global(html.dark) 匹配不上，实测暗色下窗口还是全透明；
+     2) 文字色要覆盖 App 的 --primary-text-color，而它定义在 :root[data-theme='light'] 上，
+        优先级 (0,2,0) 比 .meow-host 高，所以必须写成 html[data-theme='light'] .meow-host。
+     目标就是：亮色 = 亮底 + 黑字，暗色 = 暗底 + 白字。 -->
+<style>
+/* 只认 App 自己的 data-theme！
+   千万不要写 html.dark —— 那是文档站（VitePress）的暗色类，
+   一写就会「文档站切暗色 → 播放器跟着变暗、字全白」，实测踩过。 */
+
+/* ---- 亮色：亮底 + 黑字 ---- */
+html[data-theme='light'] .meow-host {
+	--primary-text-color: #000;
+	--sub-text-color: rgba(0, 0, 0, 0.6);
+	--player-title-text-color: #000;
+	--player-artist-text-color: rgba(0, 0, 0, 0.6);
+	--menu-active-text-color: #000;
 }
-:global(html[data-theme='dark']) .meow-host :deep(.top) {
+
+/* ---- 暗色：暗底 + 白字 ---- */
+html[data-theme='dark'] .meow-stage {
+	background: #14161c !important;
+}
+html[data-theme='dark'] .meow-host {
+	--primary-text-color: #fff;
+	--sub-text-color: rgba(255, 255, 255, 0.65);
+	--player-title-text-color: #fff;
+	--player-artist-text-color: rgba(255, 255, 255, 0.65);
+	--menu-active-text-color: #fff;
+}
+html[data-theme='dark'] .meow-host .main_window {
+	background-color: rgba(22, 24, 30, 0.72) !important;
+}
+html[data-theme='dark'] .meow-host .top {
 	background-color: rgba(255, 255, 255, 0.06) !important;
 }
-:global(html[data-theme='dark']) .meow-host :deep(.main_view) {
+html[data-theme='dark'] .meow-host .main_view {
 	background-color: rgba(255, 255, 255, 0.04) !important;
+}
+html[data-theme='dark'] .meow-host .player_box {
+	background-color: rgba(30, 32, 40, 0.78) !important;
 }
 </style>

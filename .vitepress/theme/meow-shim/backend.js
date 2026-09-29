@@ -13,6 +13,7 @@
 
 import { dispatch } from './api/event.js'
 import { parseLrc } from '../utils/lrc.js'
+import { pinyin } from 'pinyin-pro'
 
 const state = {
   songs: [],
@@ -25,6 +26,8 @@ export function initBackend({ songs, base } = {}) {
   if (Array.isArray(songs)) state.songs = songs
   if (base) state.base = base.endsWith('/') ? base : `${base}/`
   state.ready = true
+  // 方便在浏览器控制台里直接调命令自查（例如 __meowInvoke('get_album_list', {})）
+  if (typeof window !== 'undefined') window.__meowInvoke = invoke
 }
 
 /** 相对路径 -> 可访问的 URL（等价于 Tauri 的 convertFileSrc） */
@@ -65,6 +68,37 @@ function findSong(path) {
   return state.songs.find((s) => s.path === path) || null
 }
 
+/**
+ * 把 LRC 文本转成歌词组件要的 AMLL 结构：
+ *   { startTime, endTime, words: [{ word, startTime, endTime }], translatedLyric, romanLyric }
+ * （components/Lyrics/*.vue 里用的是 item.words[0].word 和 item.startTime / item.endTime）
+ * 没有逐字时间轴时就按整句时长把每个字均分，做出逐字填充的效果。
+ */
+function toAmllLines(raw) {
+  const lines = parseLrc(raw)
+  if (!lines.length) return []
+  return lines.map((line, i) => {
+    const startTime = Math.round(line.time * 1000)
+    const next = lines[i + 1]?.time
+    const endTime = Math.round((next != null ? next : line.time + 4) * 1000)
+    const chars = Array.from(line.text || '')
+    const span = Math.max(1, endTime - startTime)
+    return {
+      startTime,
+      endTime,
+      words: chars.map((ch, idx) => ({
+        word: ch,
+        startTime: startTime + Math.round((span * idx) / Math.max(1, chars.length)),
+        endTime: startTime + Math.round((span * (idx + 1)) / Math.max(1, chars.length)),
+      })),
+      translatedLyric: '',
+      romanLyric: '',
+      isBG: false,
+      isDuet: false,
+    }
+  })
+}
+
 async function playMusic(path) {
   const song = findSong(path)
   const el = ensureAudio()
@@ -76,8 +110,8 @@ async function playMusic(path) {
     console.warn('[meow] 浏览器拒绝了播放（需要用户先交互）', err)
   }
   startProgressLoop()
-  // 原版返回歌词数组，交给 playerStore.setLyrics
-  return parseLrc(song?.lyrics || '')
+  // 原版返回歌词数组，交给 playerStore.setLyrics —— 必须是 AMLL 结构
+  return toAmllLines(song?.lyrics || '')
 }
 
 // ---------------------------------------------------------------- 音乐库
@@ -121,6 +155,17 @@ function getSongList(args = {}) {
   return { groups: groupByLetter(sorted), total: sorted.length, list: sorted }
 }
 
+/** 拼音首字母（专辑 / 艺术家分组要用，和歌曲列表保持一致） */
+function firstLetter(text) {
+  try {
+    const arr = pinyin(String(text || ''), { pattern: 'first', toneType: 'none', type: 'array' })
+    const ch = String(arr?.[0]?.[0] || '#').toUpperCase()
+    return /^[A-Z]$/.test(ch) ? ch : '#'
+  } catch {
+    return '#'
+  }
+}
+
 function getAlbums() {
   const map = new Map()
   for (const song of state.songs) {
@@ -129,11 +174,13 @@ function getAlbums() {
       map.set(name, {
         id: name,
         name,
+        // 列表页卡片用的是 item.album（跳详情时 query 也传这个）
+        album: name,
         artist: song.artist || '',
-        coverUrl: song.coverUrl || '',
         cover: song.cover || '',
+        coverUrl: song.coverUrl || '',
         song_count: 0,
-        letter: /^[A-Za-z]/.test(name) ? name[0].toUpperCase() : '#',
+        letter: firstLetter(name),
       })
     }
     map.get(name).song_count += 1
@@ -149,10 +196,13 @@ function getArtists() {
       map.set(name, {
         id: name,
         name,
-        coverUrl: song.coverUrl || '',
+        // 列表页卡片用的是 item.artist
+        artist: name,
+        album: '',
         cover: song.cover || '',
+        coverUrl: song.coverUrl || '',
         song_count: 0,
-        letter: /^[A-Za-z]/.test(name) ? name[0].toUpperCase() : '#',
+        letter: firstLetter(name),
       })
     }
     map.get(name).song_count += 1
@@ -168,10 +218,40 @@ function byName(list, key, searchVal = '', order = 'asc') {
   return sorted
 }
 
-/** 专辑 / 艺术家详情：返回这个分组下的歌 */
+/** 专辑 / 艺术家详情：Album.vue / Artist.vue 是直接 `list.value = res`，所以必须返回数组 */
 function songsOf(predicate) {
-  const list = state.songs.filter(predicate)
-  return { groups: groupByLetter(sortSongs(list, 'title', false)), total: list.length, list }
+  return sortSongs(state.songs.filter(predicate), 'title', false)
+}
+
+// ---- 歌单 ------------------------------------------------------------------
+// 原版歌单存在 SQLite（Rust 侧）。网页里没有数据库，用 localStorage 存，
+// 结构：[{ id, name, songIds: [] }]
+const PLAYLIST_KEY = 'meow-playlists'
+
+function readPlaylists() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PLAYLIST_KEY) || '[]')
+    return Array.isArray(raw) ? raw : []
+  } catch {
+    return []
+  }
+}
+
+function writePlaylists(list) {
+  try {
+    localStorage.setItem(PLAYLIST_KEY, JSON.stringify(list))
+  } catch {
+    // 隐私模式下写不了就算了
+  }
+}
+
+function nextPlaylistId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+}
+
+function playlistSongs(ids) {
+  const wanted = new Set(ids || [])
+  return sortSongs(state.songs.filter((s) => wanted.has(s.id)), 'title', false)
 }
 
 // ---------------------------------------------------------------- 命令表
@@ -208,11 +288,12 @@ const commands = {
   get_song_list: getSongList,
   get_album_list: ({ searchVal = '', order = 'asc' } = {}) => {
     const albums = byName(getAlbums(), 'name', searchVal, order)
-    return { albums, total: albums.length }
+    // 列表页是 v-for="item in list" 里再 v-for="item.data"，所以要分组数组
+    return { albums: groupByLetter(albums), total: albums.length }
   },
   get_artist_list: ({ searchVal = '', order = 'asc' } = {}) => {
     const artists = byName(getArtists(), 'name', searchVal, order)
-    return { artists, total: artists.length }
+    return { artists: groupByLetter(artists), total: artists.length }
   },
   get_album_by_album_name: (args = {}) => {
     const name = args.albumName ?? args.album ?? args.name ?? ''
@@ -227,6 +308,59 @@ const commands = {
   scan_dir: () => state.songs.length,
   clear_music_lib: () => true,
   delete_by_music_lib_path: () => true,
+
+  // --- 歌单（网页端存 localStorage）
+  get_playlist_list: () =>
+    readPlaylists().map((pl) => ({
+      ...pl,
+      song_count: (pl.songIds || []).length,
+      coverUrl: playlistSongs(pl.songIds)[0]?.coverUrl || '',
+    })),
+  get_playlist_songs: ({ id } = {}) => {
+    const pl = readPlaylists().find((p) => p.id === id)
+    return pl ? playlistSongs(pl.songIds) : []
+  },
+  create_playlist: ({ name } = {}) => {
+    const list = readPlaylists()
+    const pl = { id: nextPlaylistId(), name: String(name || '新建歌单'), songIds: [] }
+    list.push(pl)
+    writePlaylists(list)
+    return pl
+  },
+  rename_playlist: ({ id, name } = {}) => {
+    const list = readPlaylists()
+    const pl = list.find((p) => p.id === id)
+    if (pl && name) {
+      pl.name = String(name)
+      writePlaylists(list)
+    }
+    return true
+  },
+  delete_playlist: ({ id } = {}) => {
+    writePlaylists(readPlaylists().filter((p) => p.id !== id))
+    return true
+  },
+  add_to_playlist: ({ id, songIds } = {}) => {
+    const list = readPlaylists()
+    const pl = list.find((p) => p.id === id)
+    if (!pl) return false
+    const ids = Array.isArray(pl.songIds) ? pl.songIds : []
+    for (const sid of Array.isArray(songIds) ? songIds : [songIds]) {
+      if (sid != null && !ids.includes(sid)) ids.push(sid)
+    }
+    pl.songIds = ids
+    writePlaylists(list)
+    return true
+  },
+  remove_from_playlist: ({ id, songId } = {}) => {
+    const list = readPlaylists()
+    const pl = list.find((p) => p.id === id)
+    if (pl) {
+      pl.songIds = (pl.songIds || []).filter((s) => s !== songId)
+      writePlaylists(list)
+    }
+    return true
+  },
 
   // --- 云听 / 壁纸 / 窗口：这些依赖原生能力，一律空实现
   get_cloud_list: () => [],
