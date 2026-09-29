@@ -1,0 +1,56 @@
+.VPMenuLink .VPLink.link span {
+  display: flex;
+  align-items: center;
+  img {
+    width: 20px;
+    height: 20px;
+    margin-right: 3px;
+  }
+}
+
+.m-nav-layout {
+  /* 覆盖全局的 vp-layout-max-width（仅当前页面使用） */
+  --vp-layout-max-width: 1440px;
+
+  /* layout 样式 */
+  .container {
+    max-width: var(--vp-layout-max-width) !important;
+  }
+  .content-container,
+  .content {
+    max-width: 100% !important;
+    // margin-left: 100px;
+  }
+
+  /* aside 样式 */
+  .aside {
+    order: 1;
+    padding-left: 100px;
+    max-width: 224px;
+    font-size: 16px !important;
+  }
+
+  .content .copyright {
+    display: none;
+  }
+
+  /* tip */
+  .tip {
+    .custom-block-title {
+      display: none;
+    }
+    p {
+      margin: 0;
+    }
+  }
+
+  .vp-doc h2 {
+    margin-top: 24px;
+  }
+  .vp-doc a {
+    text-decoration: none;
+  }
+  p > img {
+    border-radius: 5px;
+  }
+}

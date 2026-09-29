@@ -1,0 +1,241 @@
+/* var.css */
+:root {
+	--vp-c-brand-3: #0091ff;
+	--vp-custom-block-tip-bg: var(--vp-c-green-soft);
+	--tip-bg: rgba(0, 0, 0, 0.8);
+	--tip-text: whitesmoke;
+	--tip-shadow: #333;
+	--vplink-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+	--vp-layout-max-width: 1600px;
+}
+
+.dark {
+	--vp-c-brand-1: #3dd68c;
+	--vp-c-brand-2: #30a46c;
+	--vp-c-brand-3: #298459;
+	--tip-bg: #454753;
+	--tip-text: #e0e0d8;
+	--tip-shadow: #fff;
+	--vplink-shadow: 15px 15px 60px #3d3d3d;
+}
+
+h1 {
+	background: -webkit-linear-gradient(0deg, #3700ff 5%, #ff00d4 10%, #ffcc00 25%, #ff0066 50%);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+/* 提示框 */
+.custom-block.tip {
+	border-color: var(--vp-c-green-2);
+}
+
+/* 警告框 */
+.custom-block.warning {
+	border-color: #d97706;
+	border-color: var(--vp-c-yellow-2);
+}
+
+/* 危险框 */
+.custom-block.danger {
+	border-color: #f43f5e;
+	/* border-color: var(--vp-c-red-2); */
+}
+.vp-doc blockquote {
+	/* border-radius: 3px; */
+	/* padding: 10px 16px; */
+	/* background-color: var(--vp-badge-danger-bg); */
+	background-color: rgba(128, 128, 128, 0.1);
+	position: relative;
+	border-left: 2px solid gray;
+}
+
+.VPDoc .container {
+	margin: 0 !important;
+}
+
+.VPDoc.has-aside .content-container {
+	max-width: 1488px !important;
+}
+@media (min-width: 960px) {
+	.VPDoc:not(.has-sidebar) .container {
+		display: flex;
+		justify-content: center;
+		max-width: 1730px !important;
+	}
+	.VPDoc:not(.has-sidebar) .content {
+		max-width: 1730px !important;
+	}
+	.VPContent.is-home {
+		padding-top: 0 !important;
+	}
+}
+
+@media (min-width: 768px) {
+	.VPHome {
+		margin-bottom: 20px !important;
+		margin-top: 60px !important;
+	}
+}
+.aside-container {
+	position: fixed;
+	top: 0;
+	padding-top: calc(
+		var(--vp-nav-height) + var(--vp-layout-top-height, 0px) + var(--vp-doc-top-height, 0px) + 10px
+	) !important;
+	width: 224px;
+	height: 100vh;
+	overflow-x: hidden;
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+/* 自定义h2的间距 */
+.vp-doc h2 {
+	margin: 0px 0 16px;
+	padding-top: 24px;
+	border: none;
+}
+/* 标题 */
+:root {
+	/* 标题 */
+	--vp-home-hero-name-color: transparent;
+	--vp-home-hero-name-background: linear-gradient(135deg, #664df5 10%, #fbff00 100%);
+
+	/* 图标背景 */
+	--vp-home-hero-image-background-image: linear-gradient(135deg, #1900ff 10%, #ffee00 100%);
+	--vp-home-hero-image-filter: blur(150px);
+}
+
+.VPHomeFeatures {
+	margin-top: 80px;
+}
+.VPHomeFeatures .VPLink {
+	box-shadow: 1px 1px 5px 5px #ddd;
+	box-shadow: var(--vplink-shadow);
+}
+
+.VPDoc:not(.has-sidebar) .container {
+	width: 100%;
+	padding-left: 108px;
+}
+.VPDoc:not(.has-sidebar) .container .aside {
+	order: 1;
+	max-width: 300px;
+	border: none;
+	border-right: 1px solid var(--vp-c-divider);
+}
+.VPDoc:not(.has-sidebar) .container .content {
+	flex: 1;
+	border: none;
+}
+
+p > img {
+	border-radius: 5px;
+	/* box-shadow: 1px 1px 10px 1px #999; */
+	box-shadow: 1px 1px 10px 1px rgba(110, 110, 243, 0.5);
+}
+.medium-zoom-overlay {
+	z-index: 100;
+}
+
+.medium-zoom-overlay ~ img {
+	z-index: 101;
+}
+
+.medium-zoom--opened .medium-zoom-overlay {
+	opacity: 0.9 !important;
+}
+
+iframe {
+	width: 100%;
+	height: 500px;
+}
+
+.demo {
+	box-shadow: 1px 1px 10px 1px rgba(110, 110, 243, 0.5);
+	border-radius: 5px;
+}
+
+.VPSidebarItem.level-1 .text {
+	line-height: 20px;
+}
+
+.VPDocOutlineItem .outline-link {
+	line-height: 28px;
+}
+#VPSidebarNav .VPSidebarItem.level-0 {
+	padding-bottom: 10px;
+}
+
+.openBtn_box {
+	position: absolute;
+	right: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	top: 3px;
+}
+.openBtn {
+	width: 18px;
+	height: 18px;
+	border: 1px solid gray;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 3px;
+	font-size: 16px;
+	padding-bottom: 3px;
+	color: #333;
+}
+.openBtn:hover {
+	background-color: gray;
+	color: #fff;
+}
+
+.referer-warning {
+	display: none;
+}
+
+.VPHome {
+	.image {
+		width: 1200px !important;
+		height: 800px !important;
+
+		.image-bg {
+			width: 100%;
+			.VPImage.image-src {
+				max-width: 100%;
+				max-height: 100%;
+				border: 1px solid #000;
+				width: 100% !important;
+			}
+		}
+	}
+}
+
+/* ------------------------------------------------------------------
+   首页 hero：播放器区域放大 + 左侧文字整体下移
+   * 高度：原来 .image-container 的高度是 100%，被左侧文字的行高卡在 400px 左右
+     （量过：1600 宽视口下是 1000×400）。这里给一个 min-height 把它撑开，
+     播放器才有足够空间（也能 1:1 放下 850×525 的窗口）。
+   * 文字：给 .main 加 padding-top，把「Meow Player / 一句话介绍 / 按钮」整块往下挪。
+   下面两个数值就是旋钮，想再大/再往下直接改这两个数。
+   ------------------------------------------------------------------ */
+@media (min-width: 960px) {
+	/* .image 自己是 400px 高，容器给 min-height 后会「溢出去」（上下各露一截），
+	   所以这个盒子也要一起长高，容器才是规规矩矩填满。 */
+	.VPHome .VPHero .image {
+		min-height: 640px;
+	}
+	.VPHome .VPHero .image-container {
+		min-height: 640px;
+	}
+	.VPHome .VPHero .main {
+		padding-top: 150px;
+	}
+}
+
+.VPHero.has-image.VPHomeHero {
+	margin-top: 100px !important;
+}

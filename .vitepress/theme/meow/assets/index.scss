@@ -1,0 +1,67 @@
+@import url('@/assets/fonts/fonts.css');
+
+* {
+	margin: 0;
+	padding: 0;
+	user-select: none;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html,
+body {
+	width: 100vw;
+	height: 100vh;
+	transition: background 0.3s;
+	overflow: hidden;
+}
+
+li {
+	list-style: none;
+}
+
+// 公共属性
+:root {
+	--player-height: 70px;
+	--top-height: 50px;
+
+	--scrollbar-track-thumb-radius: 2px;
+	// --font-family: 'kaikaixinxin'
+}
+
+.light_icon {
+	i {
+		color: #fafafa !important;
+	}
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.2) !important;
+	}
+}
+
+.fullscreen {
+	--player-title-text-color: #fafafa;
+	--player-artist-text-color: #9b9b9b;
+}
+
+.scroll_bar {
+	&::-webkit-scrollbar {
+		width: 8px;
+		transition: all 2s;
+	}
+
+	// 滑轨
+	&::-webkit-scrollbar-track {
+		background-color: var(--scrollbar-track-bg-color);
+	}
+
+	// 滑块
+	&::-webkit-scrollbar-thumb {
+		background: var(--scrollbar-thumb-bg-color);
+		border-radius: var(--scrollbar-track-thumb-radius);
+		box-shadow: var(--scrollbar-thumb-shaow);
+	}
+
+	&::-webkit-scrollbar-thumb:hover {
+		background: var(--scrollbar-thumb-hover-bg-color);
+	}
+}

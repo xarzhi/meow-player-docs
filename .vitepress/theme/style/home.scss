@@ -1,0 +1,109 @@
+.VPHero {
+  padding: 0 !important;
+  margin-top: 0 !important;
+}
+.VPContent {
+  padding: 0;
+  margin: 0;
+}
+.VPHomeHero {
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .main {
+      order: 2 !important;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .image {
+      order: 1;
+      width: 400px;
+      height: 400px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .image-container {
+        transform: translate(0) !important;
+      }
+    }
+  }
+}
+
+@mixin scroll {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    transition: all 2s;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: -webkit-gradient(
+      linear,
+      left top,
+      left bottom,
+      from(#ff8a00),
+      to(#e52e71)
+    );
+    background: rgb(199, 199, 201);
+    border-radius: 30px;
+    box-shadow: inset 2px 2px 2px hsla(0, 11%, 78%, 0.25),
+      inset -2px -2px 2px rgba(207, 203, 203, 0.25);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgb(181, 184, 189);
+  }
+}
+@mixin scroll-dark {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    transition: all 2s;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: -webkit-gradient(
+      linear,
+      left top,
+      left bottom,
+      from(#ff8a00),
+      to(#e52e71)
+    );
+    background: rgb(62, 62, 63);
+    border-radius: 30px;
+    box-shadow: inset 2px 2px 2px hsla(0, 1%, 21%, 0.25),
+      inset -2px -2px 2px rgba(56, 55, 55, 0.25);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgb(86, 86, 87);
+  }
+}
+
+.VPFlyout.VPNavBarMenuGroup .menu .VPMenu {
+  @include scroll;
+}
+
+html[class="dark"] {
+  @include scroll-dark();
+  .VPSidebar {
+    @include scroll-dark();
+  }
+  .VPFlyout.VPNavBarMenuGroup .menu .VPMenu {
+    @include scroll-dark();
+  }
+}
+.VPSidebar,
+html {
+  @include scroll;
+}
+
+.aside-container {
+  width: 250px !important;
+}
+
+
+.referer-warning{
+  display: none;
+}

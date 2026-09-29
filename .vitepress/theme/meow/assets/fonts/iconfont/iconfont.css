@@ -1,0 +1,227 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 5082688 */
+  src: url('iconfont.woff2?t=1786540016643') format('woff2'),
+       url('iconfont.woff?t=1786540016643') format('woff'),
+       url('iconfont.ttf?t=1786540016643') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-cloud-music:before {
+  content: "\e604";
+}
+
+.icon-mod:before {
+  content: "\e603";
+}
+
+.icon-chuangyilingdong1:before {
+  content: "\e620";
+}
+
+.icon-General:before {
+  content: "\e6df";
+}
+
+.icon-performance:before {
+  content: "\e641";
+}
+
+.icon-video:before {
+  content: "\e61f";
+}
+
+.icon-picture:before {
+  content: "\e60a";
+}
+
+.icon-add:before {
+  content: "\e6a1";
+}
+
+.icon-detail:before {
+  content: "\e6ab";
+}
+
+.icon-drop-file:before {
+  content: "\e6aa";
+}
+
+.icon-question:before {
+  content: "\e606";
+}
+
+.icon-maximize:before {
+  content: "\e655";
+}
+
+.icon-home:before {
+  content: "\eb27";
+}
+
+.icon-remove:before {
+  content: "\e689";
+}
+
+.icon-folder:before {
+  content: "\e69d";
+}
+
+.icon-update:before {
+  content: "\e796";
+}
+
+.icon-album:before {
+  content: "\e60d";
+}
+
+.icon-music:before {
+  content: "\e6b2";
+}
+
+.icon-music-list:before {
+  content: "\e65f";
+}
+
+.icon-cloud:before {
+  content: "\e988";
+}
+
+.icon-artist:before {
+  content: "\e60e";
+}
+
+.icon-jiesuo:before {
+  content: "\e669";
+}
+
+.icon-suoding:before {
+  content: "\e6e6";
+}
+
+.icon-unfullscreen:before {
+  content: "\e6b5";
+}
+
+.icon-delete:before {
+  content: "\e645";
+}
+
+.icon-desc:before {
+  content: "\ee1f";
+}
+
+.icon-asc:before {
+  content: "\ee20";
+}
+
+.icon-sort:before {
+  content: "\e648";
+}
+
+.icon-search:before {
+  content: "\e602";
+}
+
+.icon-pull-up:before {
+  content: "\e653";
+}
+
+.icon-others:before {
+  content: "\e6d5";
+}
+
+.icon-lyrics-window:before {
+  content: "\e718";
+}
+
+.icon-pre:before {
+  content: "\e66c";
+}
+
+.icon-next:before {
+  content: "\eca6";
+}
+
+.icon-sound:before {
+  content: "\eca5";
+}
+
+.icon-fullscreen:before {
+  content: "\e63f";
+}
+
+.icon-order:before {
+  content: "\e601";
+}
+
+.icon-repeat:before {
+  content: "\e612";
+}
+
+.icon-liangdu-:before {
+  content: "\e634";
+}
+
+.icon-light:before {
+  content: "\e61b";
+}
+
+.icon-right-arrow:before {
+  content: "\eca7";
+}
+
+.icon-left-arrow:before {
+  content: "\eca8";
+}
+
+.icon-up-arrow:before {
+  content: "\e642";
+}
+
+.icon-down-arrow:before {
+  content: "\e643";
+}
+
+.icon-dark:before {
+  content: "\e724";
+}
+
+.icon-setting:before {
+  content: "\e611";
+}
+
+.icon-minimize:before {
+  content: "\e711";
+}
+
+.icon-close:before {
+  content: "\e609";
+}
+
+.icon-playing-list:before {
+  content: "\e60c";
+}
+
+.icon-pause:before {
+  content: "\e600";
+}
+
+.icon-random:before {
+  content: "\e68f";
+}
+
+.icon-play:before {
+  content: "\e622";
+}
+
+.icon-anchor:before {
+  content: "\e63d";
+}
+

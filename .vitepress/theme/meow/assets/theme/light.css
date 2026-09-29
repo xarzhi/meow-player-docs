@@ -1,0 +1,58 @@
+:root[data-theme='light'] {
+	/* 背景颜色 */
+	--top-bg-color: #f3f5f7;
+	--menu-bg-color: #f3f5f7;
+	--content-bg-color: #f3f5f7;
+	--letter-ahcor-bg-color: #f3f5f7;
+	--menu-active-bg-clolr: rgba(234, 239, 253, 0.5);
+	--player-bg-color: rgba(255, 255, 255, 0.8);
+	--progress-bg-color: rgba(182, 179, 179, 0.5);
+	--body-bg-color: rgba(255, 255, 255, 0.1);
+	--icon-bg-color: rgba(255, 255, 255, 0.4);
+	--menu-hover-bg: rgba(255, 255, 255, 0.4);
+
+
+	--top-bg-color: transition;
+	--menu-bg-color: transition;
+	--content-bg-color: transition;
+	--player-bg-color: transition;
+	--progress-bg-color: transition;
+	--letter-ahcor-bg-color: transition;
+
+	/* 边框颜色 */
+	--top-border-color: #e5e5e7;
+	--menu-border-color: #e5e5e7;
+
+	--top-border-color: none;
+	--menu-border-color: none;
+	/* 阴影 */
+	/* --top-shaow: 0px 1px 30px 5px #f3f2f2; */
+	--top-shaow: none;
+
+	/* 字体颜色 */
+	--primary-text-color: #333;
+	--sub-text-color: rgba(0, 0, 0, 0.5);
+
+	--menu-active-text-color: ##333;
+	--menu-active-bar-color: #335eea;
+	--player-title-text-color: #333;
+	--player-artist-text-color: #bababa;
+	/* --music-list-title-text-color:#BABABA; */
+
+	--scrollbar-track-bg-color: transparent;
+
+	--scrollbar-thumb-bg-color: rgb(221, 222, 224);
+	--scrollbar-thumb-hover-bg-color: rgb(190, 199, 209);
+	--scrollbar-thumb-shaow: inset 2px 2px 2px hsla(0, 30%, 87%, 0.25), inset -2px -2px 2px rgba(232, 227, 227, 0.25);
+
+	--letter-evt-bg: rgba(0, 0, 0, 0.3);
+	--letter-evt-text: #fff;
+
+	--setting-box-bg: rgba(255, 255, 255, 0.5);
+	--setting-box-shaow: 0 0 5px 0px #ddd;
+
+	--evt-letter-bg: rgba(0, 0, 0, 0.5);
+	--evt-letter-color: #000;
+	/* --setting-box-bg: #000; */
+	/* --setting-box-bg: rgba(51, 51, 51, 0.3); */
+}

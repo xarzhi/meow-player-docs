@@ -8,6 +8,34 @@
     "preview": "vitepress preview ."
   },
   "devDependencies": {
+    "sass": "^1.105.0",
+    "sass-embedded": "^1.105.0",
     "vitepress": "^1.6.3"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "@applemusic-like-lyrics/core": "^0.6.0",
+    "@applemusic-like-lyrics/lyric": "^1.1.0",
+    "@applemusic-like-lyrics/ttml": "^1.0.1",
+    "@applemusic-like-lyrics/vue": "^0.6.0",
+    "@pixi/app": "^7.4.3",
+    "@pixi/core": "^7.4.3",
+    "@pixi/display": "^7.4.3",
+    "@pixi/filter-blur": "^7.4.3",
+    "@pixi/filter-bulge-pinch": "^5.1.1",
+    "@pixi/filter-color-matrix": "^7.4.3",
+    "@pixi/sprite": "^7.4.3",
+    "@vueuse/core": "^15.0.0",
+    "animejs": "^3.2.2",
+    "ant-design-vue": "~4.2.6",
+    "gsap": "^3.15.0",
+    "lodash": "^4.18.1",
+    "lrc-kit": "^1.2.1",
+    "music-metadata": "^11.16.1",
+    "pinia": "^4.0.3",
+    "pinyin-pro": "^3.29.4",
+    "vite-plugin-wasm": "^3.6.0",
+    "vue-router": "^5.3.1",
+    "webdav": "^5.11.0"
   }
 }
