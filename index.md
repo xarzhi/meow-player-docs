@@ -40,9 +40,9 @@ features:
 本地优先、单进程、不联网（除了查一下有没有新版本）的 Windows 音乐播放器。界面是 GPUI 直接 GPU 绘制，不是套壳网页。
 
 <div style="display:flex;gap:12px;flex-wrap:wrap;margin:24px 0">
-  <a href="/meow-player/guide/"><strong>先看功能一览 →</strong></a>
-  <a href="/meow-player/guide/performance/">性能与资源占用 →</a>
-  <a href="/meow-player/guide/faq/">常见问题 →</a>
+  <a href="./guide/"><strong>先看功能一览 →</strong></a>
+  <a href="./guide/performance/"><strong>性能与资源占用 →</strong></a>
+  <a href="./guide/faq/"><strong>常见问题 →</strong></a>
 </div>
 
 ## 主要特性速览

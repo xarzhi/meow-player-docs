@@ -1,0 +1,10 @@
+node_modules/
+.pnpm-store/
+
+# VitePress 构建产物与缓存，都是可再生成的
+.vitepress/dist/
+.vitepress/cache/
+.pnpm-store/
+*.log
+.DS_Store
+Thumbs.db

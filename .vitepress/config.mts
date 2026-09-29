@@ -5,7 +5,9 @@ export default defineConfig({
   lang: 'zh-CN',
   title: 'Meow Player',
   description: '一个使用 Rust + GPUI 实现的本地音乐播放器',
-  base: '/meow-player/',
+  // GitHub Pages 项目站点的地址是 https://<user>.github.io/<repo>/，
+  // 所以 base 必须写成仓库名。仓库改名或换自定义域名时要同步改这里。
+  base: '/meow-player-docs/',
   cleanUrls: true,
   themeConfig: {
     nav: [
