@@ -338,4 +338,19 @@ html[data-theme='dark'] .meow-host.meow-mat-mica .main_window {
 	backdrop-filter: blur(60px) saturate(1.4);
 	-webkit-backdrop-filter: blur(60px) saturate(1.4);
 }
+
+/* ---- 亚克力 / 云母的关键一步：让「舞台」变半透明 ----------------------------
+   之前亚克力之所以不好看，是这里的问题：窗口背后是 .meow-stage 的**不透明纯色**，
+   而 backdrop-filter: blur() 糊一块纯色等于没糊（糊完还是同一个颜色），
+   看着就只是一块发白的板，不是玻璃。
+   把舞台透出来一点、露出文档站的内容当「桌面」，窗口那层 blur 才是真的磨砂玻璃。
+   （没有用壁纸图片 —— 只是把背后的内容透出来。） */
+html[data-theme='light'] .meow-stage:has(.meow-host.meow-mat-acrylic),
+html[data-theme='light'] .meow-stage:has(.meow-host.meow-mat-mica) {
+	background: rgba(233, 238, 246, 0.4) !important;
+}
+html[data-theme='dark'] .meow-stage:has(.meow-host.meow-mat-acrylic),
+html[data-theme='dark'] .meow-stage:has(.meow-host.meow-mat-mica) {
+	background: rgba(20, 22, 28, 0.4) !important;
+}
 </style>
