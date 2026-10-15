@@ -15,7 +15,10 @@ const base = '/meow-player-docs/'
 const AUDIO_RE = /\.(mp3|flac|wav|m4a|aac|ogg|oga|opus|wma|aif|aiff|ape)$/i
 
 /** 统一的路径（正斜杠，Vite 用） */
-const p = (...parts) => resolve(...parts).split('\\').join('/')
+const p = (...parts) =>
+	resolve(...parts)
+		.split('\\')
+		.join('/')
 
 const rootDir = process.cwd()
 const themeDir = p(rootDir, '.vitepress/theme')
@@ -31,131 +34,131 @@ const coversDir = p(rootDir, 'public/covers')
 // 新增歌曲后重启 dev（或重新 build）即可收录。
 
 function resolveSongsDir() {
-  const candidates = []
-  try {
-    candidates.push(fileURLToPath(new URL('../public/songs', import.meta.url)))
-  } catch {
-    // 配置被打包时 import.meta.url 可能不可用，忽略
-  }
-  candidates.push(p(rootDir, 'public/songs'))
-  for (const dir of candidates) {
-    try {
-      if (statSync(dir).isDirectory()) return dir
-    } catch {
-      // 试下一个
-    }
-  }
-  return candidates[candidates.length - 1]
+	const candidates = []
+	try {
+		candidates.push(fileURLToPath(new URL('../public/songs', import.meta.url)))
+	} catch {
+		// 配置被打包时 import.meta.url 可能不可用，忽略
+	}
+	candidates.push(p(rootDir, 'public/songs'))
+	for (const dir of candidates) {
+		try {
+			if (statSync(dir).isDirectory()) return dir
+		} catch {
+			// 试下一个
+		}
+	}
+	return candidates[candidates.length - 1]
 }
 
 function readLyricFiles() {
-  try {
-    return readdirSync(resolveSongsDir()).filter((f) => /\.lrc$/i.test(f))
-  } catch {
-    return []
-  }
+	try {
+		return readdirSync(resolveSongsDir()).filter(f => /\.lrc$/i.test(f))
+	} catch {
+		return []
+	}
 }
 
 function safeName(text) {
-  return String(text || 'cover')
-    .replace(/[\\/:*?"<>|\s]+/g, '_')
-    .slice(0, 40)
+	return String(text || 'cover')
+		.replace(/[\\/:*?"<>|\s]+/g, '_')
+		.slice(0, 40)
 }
 
 function mmss(ms) {
-  const total = Math.max(0, Math.round((ms || 0) / 1000))
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+	const total = Math.max(0, Math.round((ms || 0) / 1000))
+	return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
 }
 
 async function buildLibrary() {
-  const dir = resolveSongsDir()
-  let files = []
-  try {
-    files = readdirSync(dir).filter((f) => AUDIO_RE.test(f))
-  } catch {
-    return []
-  }
-  try {
-    mkdirSync(coversDir, { recursive: true })
-  } catch {
-    // 建不了目录就只是没有封面
-  }
+	const dir = resolveSongsDir()
+	let files = []
+	try {
+		files = readdirSync(dir).filter(f => AUDIO_RE.test(f))
+	} catch {
+		return []
+	}
+	try {
+		mkdirSync(coversDir, { recursive: true })
+	} catch {
+		// 建不了目录就只是没有封面
+	}
 
-  const songs = []
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i]
-    const full = resolve(dir, file)
-    let meta = null
-    try {
-      meta = await parseFile(full, { duration: true, skipPostHeaders: true })
-    } catch (err) {
-      console.warn(`[meow] 读标签失败：${file} —— ${err?.message || err}`)
-    }
-    const common = meta?.common || {}
-    const stem = file.replace(/\.[^.]+$/, '')
-    const title = String(common.title || stem).trim()
-    const artist = String(common.artist || '').trim()
-    const album = String(common.album || '').trim()
-    const duration = Math.round((meta?.format?.duration || 0) * 1000)
+	const songs = []
+	for (let i = 0; i < files.length; i++) {
+		const file = files[i]
+		const full = resolve(dir, file)
+		let meta = null
+		try {
+			meta = await parseFile(full, { duration: true, skipPostHeaders: true })
+		} catch (err) {
+			console.warn(`[meow] 读标签失败：${file} —— ${err?.message || err}`)
+		}
+		const common = meta?.common || {}
+		const stem = file.replace(/\.[^.]+$/, '')
+		const title = String(common.title || stem).trim()
+		const artist = String(common.artist || '').trim()
+		const album = String(common.album || '').trim()
+		const duration = Math.round((meta?.format?.duration || 0) * 1000)
 
-    // 封面：直接写成静态文件（同名已存在就复用，不重复写）
-    let coverUrl = ''
-    const pic = Array.isArray(common.picture) ? common.picture[0] : null
-    if (pic?.data) {
-      const ext = String(pic.format || '').includes('png') ? 'png' : 'jpg'
-      const name = `${i + 1}-${safeName(title)}.${ext}`
-      const out = resolve(coversDir, name)
-      try {
-        if (!existsSync(out)) writeFileSync(out, Buffer.from(pic.data))
-        coverUrl = `covers/${name}`
-      } catch (err) {
-        console.warn(`[meow] 写封面失败：${name} —— ${err?.message || err}`)
-      }
-    }
+		// 封面：直接写成静态文件（同名已存在就复用，不重复写）
+		let coverUrl = ''
+		const pic = Array.isArray(common.picture) ? common.picture[0] : null
+		if (pic?.data) {
+			const ext = String(pic.format || '').includes('png') ? 'png' : 'jpg'
+			const name = `${i + 1}-${safeName(title)}.${ext}`
+			const out = resolve(coversDir, name)
+			try {
+				if (!existsSync(out)) writeFileSync(out, Buffer.from(pic.data))
+				coverUrl = `covers/${name}`
+			} catch (err) {
+				console.warn(`[meow] 写封面失败：${name} —— ${err?.message || err}`)
+			}
+		}
 
-    const lyrics = (Array.isArray(common.lyrics) && common.lyrics[0]?.text) || ''
+		const lyrics = (Array.isArray(common.lyrics) && common.lyrics[0]?.text) || ''
 
-    // 首字母分组（拼音），和 App 的「按拼音首字母分组」对齐
-    let letter = '#'
-    try {
-      const py = pinyin(title, { pattern: 'first', toneType: 'none', type: 'array' })
-      letter = String(py?.[0]?.[0] || '#').toUpperCase()
-    } catch {
-      // 用 #
-    }
+		// 首字母分组（拼音），和 App 的「按拼音首字母分组」对齐
+		let letter = '#'
+		try {
+			const py = pinyin(title, { pattern: 'first', toneType: 'none', type: 'array' })
+			letter = String(py?.[0]?.[0] || '#').toUpperCase()
+		} catch {
+			// 用 #
+		}
 
-    let size = 0
-    try {
-      size = statSync(full).size
-    } catch {
-      // 忽略
-    }
+		let size = 0
+		try {
+			size = statSync(full).size
+		} catch {
+			// 忽略
+		}
 
-    songs.push({
-      id: i + 1,
-      title,
-      artist,
-      artists: artist,
-      album,
-      path: `songs/${file}`,
-      filename: file,
-      duration,
-      durationStr: mmss(duration),
-      cover: coverUrl,
-      coverUrl,
-      letter: /^[A-Z]$/.test(letter) ? letter : '#',
-      lyrics,
-      size,
-    })
-  }
+		songs.push({
+			id: i + 1,
+			title,
+			artist,
+			artists: artist,
+			album,
+			path: `songs/${file}`,
+			filename: file,
+			duration,
+			durationStr: mmss(duration),
+			cover: coverUrl,
+			coverUrl,
+			letter: /^[A-Z]$/.test(letter) ? letter : '#',
+			lyrics,
+			size,
+		})
+	}
 
-  songs.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hans-CN', { numeric: true }))
-  return songs
+	songs.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hans-CN', { numeric: true }))
+	return songs
 }
 
 const songs = await buildLibrary()
 const lyricFiles = readLyricFiles()
-console.log(`[meow] 音乐库：${songs.length} 首（封面 ${songs.filter((s) => s.coverUrl).length} 个）`)
+console.log(`[meow] 音乐库：${songs.length} 首（封面 ${songs.filter(s => s.coverUrl).length} 个）`)
 
 export default defineConfig({
 	lang: 'zh-CN',
@@ -198,6 +201,7 @@ export default defineConfig({
 		nav: [
 			{ text: '指南', link: '/guide/' },
 			{ text: '下载', link: 'https://gitee.com/xarzhi/meow-player/releases' },
+			{ text: '交流', link: '/guide/联系' },
 		],
 		sidebar: [
 			{
