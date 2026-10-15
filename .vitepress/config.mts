@@ -158,69 +158,65 @@ const lyricFiles = readLyricFiles()
 console.log(`[meow] 音乐库：${songs.length} 首（封面 ${songs.filter((s) => s.coverUrl).length} 个）`)
 
 export default defineConfig({
-  lang: 'zh-CN',
-  title: 'Meow Player',
-  description: '一个使用 Rust + GPUI 实现的本地音乐播放器',
-  base,
-  cleanUrls: true,
-  // 浏览器标签页图标。注意：head 里的路径不会自动拼 base，必须自己加。
-  head: [
-    ['link', { rel: 'icon', type: 'image/png', href: `${base}logo.png` }],
-    ['link', { rel: 'apple-touch-icon', href: `${base}logo.png` }],
-  ],
-  vite: {
-    plugins: [wasm()],
-    resolve: {
-      alias: [
-        // 把 Tauri 的 API 整体接到网页替身上，这样从 meow-player 搬过来的页面一行都不用改
-        { find: /^@tauri-apps\//, replacement: `${shimDir}/` },
-        // 原项目 vite.config.js 里的那套别名
-        { find: /^@\//, replacement: `${meowDir}/` },
-        { find: '@components', replacement: `${meowDir}/components` },
-        { find: '@assets', replacement: `${meowDir}/assets` },
-        { find: '@stores', replacement: `${meowDir}/stores` },
-        { find: '@utils', replacement: `${meowDir}/utils` },
-        { find: '@hooks', replacement: `${meowDir}/hooks` },
-        { find: '@directives', replacement: `${meowDir}/directives` },
-        { find: '@router', replacement: `${meowDir}/router` },
-      ],
-    },
-    build: {
-      // 原项目的 build.target 就是 esnext（AMLL 的 wasm 需要）
-      target: 'esnext',
-    },
-  },
-  themeConfig: {
-    // public/songs 的清单。放在 themeConfig 里是因为它会被序列化进客户端「站点数据」，
-    // dev 和 build 两条路都能拿到 —— 比 vite.define 可靠（后者在这个项目里 dev 下不生效）。
-    // 用展开的方式塞进去，避免 TS 对未知字段报错。
-    ...({ songs, lyricFiles } as Record<string, unknown>),
-    nav: [
-      { text: '指南', link: '/guide/' },
-      { text: '下载', link: 'https://gitee.com/xarzhi/meow-player/releases' },
-    ],
-    sidebar: [
-      {
-        text: '指南',
-        items: [
-          { text: '这是什么', link: '/guide/' },
-          { text: '安装与上手', link: '/guide/install' },
-          { text: '功能一览', link: '/guide/features' },
-          { text: '性能与资源占用', link: '/guide/performance' },
-          { text: '为什么做它', link: '/guide/why' },
-          { text: '快捷键', link: '/guide/shortcuts' },
-          { text: '常见问题', link: '/guide/faq' },
-        ],
-      },
-    ],
-    outline: { label: '本页目录', level: [2, 3] },
-    docFooter: { prev: '上一篇', next: '下一篇' },
-    darkModeSwitchLabel: '主题',
-    returnToTopLabel: '回到顶部',
-    search: { provider: 'local' },
-    footer: {
-      message: '基于 Rust + GPUI，仅供学习交流',
-      copyright: 'Meow Player',
-    },
-  },
+	lang: 'zh-CN',
+	title: 'Meow Player',
+	description: '一个使用 Rust + GPUI 实现的本地音乐播放器',
+	base,
+	cleanUrls: true,
+	// 浏览器标签页图标。注意：head 里的路径不会自动拼 base，必须自己加。
+	head: [
+		['link', { rel: 'icon', type: 'image/png', href: `${base}logo.png` }],
+		['link', { rel: 'apple-touch-icon', href: `${base}logo.png` }],
+	],
+	vite: {
+		plugins: [wasm()],
+		resolve: {
+			alias: [
+				// 把 Tauri 的 API 整体接到网页替身上，这样从 meow-player 搬过来的页面一行都不用改
+				{ find: /^@tauri-apps\//, replacement: `${shimDir}/` },
+				// 原项目 vite.config.js 里的那套别名
+				{ find: /^@\//, replacement: `${meowDir}/` },
+				{ find: '@components', replacement: `${meowDir}/components` },
+				{ find: '@assets', replacement: `${meowDir}/assets` },
+				{ find: '@stores', replacement: `${meowDir}/stores` },
+				{ find: '@utils', replacement: `${meowDir}/utils` },
+				{ find: '@hooks', replacement: `${meowDir}/hooks` },
+				{ find: '@directives', replacement: `${meowDir}/directives` },
+				{ find: '@router', replacement: `${meowDir}/router` },
+			],
+		},
+		build: {
+			// 原项目的 build.target 就是 esnext（AMLL 的 wasm 需要）
+			target: 'esnext',
+		},
+	},
+	themeConfig: {
+		// public/songs 的清单。放在 themeConfig 里是因为它会被序列化进客户端「站点数据」，
+		// dev 和 build 两条路都能拿到 —— 比 vite.define 可靠（后者在这个项目里 dev 下不生效）。
+		// 用展开的方式塞进去，避免 TS 对未知字段报错。
+		...({ songs, lyricFiles } as Record<string, unknown>),
+		nav: [
+			{ text: '指南', link: '/guide/' },
+			{ text: '下载', link: 'https://gitee.com/xarzhi/meow-player/releases' },
+		],
+		sidebar: [
+			{
+				text: '指南',
+				items: [
+					{ text: '为什么', link: '/guide/01.为什么' },
+					{ text: '外观', link: '/guide/02.外观' },
+					{ text: '快捷键', link: '/guide/03.快捷键' },
+				],
+			},
+		],
+		outline: { label: '本页目录', level: [2, 3] },
+		docFooter: { prev: '上一篇', next: '下一篇' },
+		darkModeSwitchLabel: '主题',
+		returnToTopLabel: '回到顶部',
+		search: { provider: 'local' },
+		footer: {
+			message: '基于 Rust + GPUI，仅供学习交流',
+			copyright: 'Meow Player',
+		},
+	},
 })
