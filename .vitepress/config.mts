@@ -199,7 +199,7 @@ export default defineConfig({
 		// 用展开的方式塞进去，避免 TS 对未知字段报错。
 		...({ songs, lyricFiles } as Record<string, unknown>),
 		nav: [
-			{ text: '指南', link: '/guide/' },
+			{ text: '指南', link: '/guide/01.为什么' },
 			{ text: '下载', link: 'https://gitee.com/xarzhi/meow-player/releases' },
 			{ text: '交流', link: '/guide/联系' },
 		],
